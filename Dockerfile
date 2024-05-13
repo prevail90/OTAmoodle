@@ -3,6 +3,7 @@ FROM php:7.4-apache
 
 # Set environment variables for Moodle
 ENV MOODLE_HOME /var/www/html/moodle
+ARG MOODLE_VERSION
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -34,23 +35,27 @@ RUN apt-get update && apt-get install -y \
         ldap \
         curl \
         zip \
+        pdo \
+        pdo_pgsql \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and extract Moodle
 WORKDIR /tmp
-RUN git clone --branch MOODLE_39_STABLE --depth 1 https://github.com/moodle/moodle.git $MOODLE_HOME
+RUN if [ "$MOODLE_VERSION" = "latest" ]; then \
+        MOODLE_VERSION=$(curl -L https://download.moodle.org/api/1.0/ /latest/ | grep -oP '(?<=filename=")[^"]*(?=")') \
+    fi && \
+    curl -o moodle.zip -L https://download.moodle.org/download.php/direct/stable$MOODLE_VERSION && \
+    unzip moodle.zip -d $MOODLE_HOME && \
+    mv $MOODLE_HOME/moodle/* $MOODLE_HOME && \
+    rm moodle.zip && \
+    chown -R www-data:www-data $MOODLE_HOME && \
+    chmod -R 777 $MOODLE_HOME
 
 # Set up Moodle data directory
 RUN mkdir $MOODLE_HOME/data \
     && chown -R www-data:www-data $MOODLE_HOME \
     && chmod -R 777 $MOODLE_HOME
-
-# Install PostgreSQL support for PHP
-RUN apt-get update && apt-get install -y libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
 
 # Expose port 80 and start Apache
 EXPOSE 80
