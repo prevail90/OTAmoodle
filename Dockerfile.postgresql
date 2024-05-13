@@ -1,0 +1,7 @@
+FROM postgres:13
+
+# Copy custom initialization script to container
+COPY init-moodle-db.sh /docker-entrypoint-initdb.d/init-moodle-db.sh
+
+# Grant execute permission to the script
+RUN chmod +x /docker-entrypoint-initdb.d/init-moodle-db.sh
