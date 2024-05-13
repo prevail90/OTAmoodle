@@ -24,7 +24,9 @@ services:
       - postgresql
 
   db:
-    image: postgres:13
+    build:
+      context: .
+      dockerfile: Dockerfile.postgresql
     environment:
       POSTGRES_DB: moodle
       POSTGRES_USER: moodle
