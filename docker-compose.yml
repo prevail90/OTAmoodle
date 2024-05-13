@@ -1,0 +1,48 @@
+version: '3.8'
+
+networks:
+  moodle:
+  postgresql:
+
+services:
+  moodle:
+    build:
+      context: .
+      args:
+        MOODLE_VERSION: "latest"
+    ports:
+      - "8080:80"
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=moodle
+      - POSTGRES_USER=moodle
+      - POSTGRES_PASSWORD=your_password_here
+    volumes:
+      - ./moodledata:/var/www/html/moodledata
+    networks:
+      - moodle
+      - postgresql
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: moodle
+      POSTGRES_USER: moodle
+      POSTGRES_PASSWORD: your_password_here
+    volumes:
+      - ./moodle-db:/var/lib/postgresql/data
+    networks:
+      - postgresql
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: your_email@example.com
+      PGADMIN_DEFAULT_PASSWORD: your_password_here
+    ports:
+      - "5050:80"
+    networks:
+      - postgresql
+
+volumes:
+  moodle-db:
